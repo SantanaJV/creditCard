@@ -22,6 +22,4 @@ const rfidSchema = new mongoose.Schema({
     }
 });
 
-const Rfid = mongoose.model("Rfid", rfidSchema, 'rfid');
-
-module.exports = Rfid;
+module.exports.Rfid = mongoose.model("Rfid", rfidSchema, 'rfid');
