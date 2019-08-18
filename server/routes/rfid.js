@@ -35,5 +35,23 @@ router.post("/", async (req, res) => {
     }
 });
 
+router.put("/:uid", (req, res) => {
+    try{
+        let rfid = req.body;
+        console.log(req.body);
+
+        if(!rfid.uid || !rfid.name || !rfid.grade) return res.status(400).send("Invalid request.");
+
+        rfid = await Rfid.findOneAndUpdate({ uid: req.body.uid }, rfid);
+
+        if(!rfid) return res.status(404).send("Rfid with given UID not found");
+
+        res.status(200).send(rfid);
+    } catch(err) {
+        res.status(500).send("Internal error - check server log");
+        console.log(err);
+    }
+});
+
 module.exports = router;
 
