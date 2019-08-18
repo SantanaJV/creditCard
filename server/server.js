@@ -1,19 +1,9 @@
 const app = require("express")();
 const bodyparser = require("body-parser");
+const rfid = require('./routes/rfid');
 
 app.use(bodyparser.json());
-
-app.get("/", (req, res) => {
-  response = {
-    data: "samba"
-  };
-  res.send(response);
-});
-
-app.post("/", (req, res) => {
-  let body = req.body;
-  res.send(body);
-});
+app.use("/rfid", rfid);
 
 app.listen(3000, () => {
   console.log("Listening on port 3000");
