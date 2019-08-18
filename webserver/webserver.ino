@@ -11,6 +11,7 @@
 
 ESP8266WebServer server(80);
 MFRC522 rfid(SS_PIN, RST_PIN);
+DynamicJsonDocument data(1024);
 
 String currentRfid = "";
 String rfidPayload = "";
@@ -56,35 +57,10 @@ void setup() {
   Serial.println("WebServer started!");
 }
 
-void httpRequest() {
-  if(WiFi.status() == WL_CONNECTED && millis() >= timeUntilNextRequest ) {
-    HTTPClient http;
-    http.begin("http://192.168.3.123:3000/");
-    int httpCode = http.GET();
-  
-    if(httpCode > 0) {
-      String payload = http.getString();
-      DynamicJsonDocument doc(1024);
-      DeserializationError err = deserializeJson(doc, payload);
-      
-      if(err) {
-        Serial.print(F("deserializeJson() failed with code "));
-        Serial.println(err.c_str());
-      }
-
-      String data = doc["data"];
-      
-      Serial.println(data);
-    }
-  
-    http.end();
-  }
-  timeUntilNextRequest = millis() + 10000;
-}
-
 void loop() {
   // put your main code here, to run repeatedly:
   readID();
+  server.handleClient();
 }
 
 void readID(){
@@ -103,10 +79,37 @@ void readID(){
 
   Serial.println(content);
   currentRfid = content;
+  requestRfidData();
 
   rfid.PICC_HaltA();
 }
 
 void requestRfidData() {
+  if(WiFi.status() != WL_CONNECTED) return;
 
+  HTTPClient http;
+
+  String URL = "http://192.168.3.123:3000/";
+  URL.concat(currentRfid);
+
+  Serial.print("Requesting data from ");
+  Serial.println(URL);
+
+  http.begin(URL);
+  int httpCode = http.GET();
+  
+  if(httpCode > 0) {
+    rfidPayload = http.getString();
+
+    DeserializationError err = deserializeJson(data, rfidPayload);
+      
+    if(err) {
+      Serial.print(F("deserializeJson() failed with code "));
+      Serial.println(err.c_str());
+    }
+      
+    Serial.println(data);
+  }
+  
+  http.end();  
 }
