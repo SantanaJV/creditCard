@@ -3,14 +3,25 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>
 
 #define SS_PIN D4
 #define RST_PIN D2
 
+ESP8266WebServer server(80);
 MFRC522 rfid(SS_PIN, RST_PIN);
 
+String currentRfid = "";
+String rfidPayload = "";
 String ssid = "TP-LINK_ED0514", password = "123universo";
 long timeUntilNextRequest;
+bool loggedIn = false;
+
+void handleRoot();
+void handleLogin();
+void handleMain();
+void handleNotFound();
 
 void setup() {
   // put your setup code here, to run once:
@@ -27,8 +38,22 @@ void setup() {
     delay(250);
   }
   Serial.println("");
-  Serial.print("WiFi connected!");
-  Serial.println("");
+  Serial.print("WiFi connected! IP:");
+  Serial.println(WiFi.LocalIP());
+
+  if(MDNS.begin("esp8266")) {
+    Serial.println("mDNS started!");
+  } else {
+    Serial.println("Error setting up mDNS");
+  }
+
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/", HTTP_POST, handleLogin);
+  server.on("/main", HTTP_GET, handleMain);
+  server.onNotFound(handleNotFound);
+
+  server.begin();
+  Serial.println("WebServer started!");
 }
 
 void httpRequest() {
@@ -72,11 +97,16 @@ void readID(){
   byte letra;
   
   for(byte i = 0; i < rfid.uid.size; i++) {
-    Serial.print(rfid.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    Serial.print(rfid.uid.uidByte[i], HEX);
     content.concat(String(rfid.uid.uidByte[i] < 0x10 ? " 0" : " "));
     content.concat(String(rfid.uid.uidByte[i], HEX));
   }
 
+  Serial.println(content);
+  currentRfid = content;
+
   rfid.PICC_HaltA();
+}
+
+void requestRfidData() {
+
 }
