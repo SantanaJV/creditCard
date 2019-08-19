@@ -6,6 +6,9 @@
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 
+#include "login-page.h"
+#include "main-page.h"
+
 #define SS_PIN D4
 #define RST_PIN D2
 
@@ -21,7 +24,10 @@ bool loggedIn = false;
 
 void handleRoot();
 void handleLogin();
-void handleMain();
+void handleGetRfid();
+void handlePostRfid();
+void handleUpdateRfid();
+void handleDeleteRfid();
 void handleNotFound();
 
 void setup() {
@@ -50,7 +56,10 @@ void setup() {
 
   server.on("/", HTTP_GET, handleRoot);
   server.on("/", HTTP_POST, handleLogin);
-  server.on("/main", HTTP_GET, handleMain);
+  server.on("/rfid", HTTP_GET, handleGetRfid);
+  server.on("/rfid", HTTP_POST, handlePostRfid);
+  server.on("/rfid/update", HTTP_POST, handleUpdateRfid);
+  server.on("/rfid/delete", HTTP_POST, handleDeleteRfid);
   server.onNotFound(handleNotFound);
 
   server.begin();
@@ -61,6 +70,54 @@ void loop() {
   // put your main code here, to run repeatedly:
   readID();
   server.handleClient();
+}
+
+void handleGetRfid() {
+  if(!loggedIn) {
+    server.sendHeader("Location", "/", true);
+    server.send(302, "text/plane", "You must be logged in to perform this request");
+    return;
+  }
+
+  server.send(200, "application/json", rfidPayload);
+}
+
+void handlePostRfid() {
+  if(!loggedIn) {
+    server.sendHeader("Location", "/", true);
+    server.send(302, "text/plane", "You must be logged in to perform this request");
+    return;
+  }
+}
+
+void handleRoot(){
+  if(loggedIn) {
+    server.send(200, "text/html", main_page);
+    return;
+  }
+
+  server.send(200, "text/html", login_page);
+}
+
+void handleLogin() {
+  if(!server.hasArg("password") || server.arg("password") == NULL) {
+    server.sendHeader("Location", "/", true);
+    server.send(302, "text/plane", "Invalid Request");
+    return; 
+  }
+
+  if(server.arg("password") == password) {
+    loggedIn = true;
+    server.send(200, "text/html", main_page);
+  } else {
+    server.sendHeader("Location", "/", true);
+    server.send(302, "text/plane", "Invalid Password");
+  }
+}
+
+void handleNotFound(){
+  server.sendHeader("Location", "/", true);
+  server.send(302, "text/plain", "Not found"); 
 }
 
 void readID(){
