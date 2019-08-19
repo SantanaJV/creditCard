@@ -10,6 +10,7 @@ const char main_page[] PROGMEM = R"=====(
 				font-family: Helvetica, Arial, sans-serif;
 				margin: 0;
 				padding: 0;
+				transition:all 500ms;
 			}
 
 			.header h1 {
@@ -24,13 +25,50 @@ const char main_page[] PROGMEM = R"=====(
 				display: flex;
 			}
 
-			.form {
+			.content {
 				margin-left: 20px;
-				justify-content: center;
+				display: inherit;
 			}
 
-			.form p {
+			.content-block p {
 				color: #eee;
+				margin: 0 0 5px 0;
+			}
+
+			.content-block {
+				margin: 10px 0 10px 0;
+			}
+
+			.submit {
+				border: 2px solid white;
+				font-size: 20px;
+				border-radius: 10px;
+				color: white;
+				background-color: transparent;
+				transition:all 250ms;
+				outline: none!important;
+			}
+
+			.submit:hover {
+				color: black;
+				background-color: white;
+			}
+
+			.text-input {
+				border: 1.5px solid #BBB;
+				border-radius: 10px;
+				width: 350px;
+				padding: 5px;
+				font-size: 20px;
+				outline: none!important;
+			}
+
+			.text-input:focus {
+				background-color: white;
+			}
+
+			#unregisterButton {
+				display: none;
 			}
 
 		</style>
@@ -38,26 +76,83 @@ const char main_page[] PROGMEM = R"=====(
   <body>
 		<div class="header">
 			<h1 id="title">
-				JSON TEST
+				Aguardando cartão...
 			</h1>
 		</div>
+		<div class="content" id="content">
+			<div class="content-block">
+				<p class="content-block-label">Nome</p>
+				<input class="text-input" type="text" id="nome">
+			</div>
+			<div class="content-block">
+				<p class="content-block-label">Série</p>
+				<input class="text-input" type="text" id="grade">
+			</div>
+			<div class="content-block">
+				<p class="content-block-label">Saldo</p>
+				<input class="text-input" type="number" id="balance">
+			</div>
+			<input type="button" value="Descadastrar" class="submit" id="unregisterButton" onclick="deleteRfid()" disabled>
+			<input type="button" value="Cadastrar" class="submit" id="registerButton" onclick="writeRfid()" disabled>
+		</div>
 		<script>
+            var cardSelected = false;
+            var isRegistered = false;
+            var rfid = {};
+
+			function writeRfid() {
+				
+            }
+            
+            function updateRfid() {
+
+            }
+
+			function deleteRfid() {
+				var xhttp = new XMLHttpRequest();
+				xhttp.open('DELETE', 'user');
+			}
+
 			setInterval(function () {
-				getData();
+				getRfidData();
 			}, 5000);
 
-			function getData () {
-				var response;
+			function getRfidData () {
 				var xhttp = new XMLHttpRequest();
 				xhttp.onreadystatechange = function() {
 					if(this.readyState == 4 && this.status == 200) {
-						response = this.response;
-						console.log("Got response: ");
+						data = JSON.parse(this.response);
+						
+						if(!data) {
+							return;
+                        }
+
+                        if(cardSelected)
+                            if(rfid.uid == data.rfid.uid) return;
+                        
+                        rfid = data.rfid;
+                        isRegistered = data.registered;
+                        
+						if(!isRegistered) {
+							document.getElementById("unregisterButton").style = "display: none;";
+							document.getElementById("registerButton").innerHTML = "Cadastrar";
+						} else {
+							document.getElementById("unregisterButton").style = "display: inherit;";
+							document.getElementById("registerButton").innerHTML = "Salvar Mudanças";
+
+							document.getElementById("content").style = "display: inherit;";
+							document.getElementById("title").innerHTML = rfid.uid + " - Aproxime outro cartão para inspecioná-lo";
+							document.getElementById("name").innerHTML = rfid.name;
+							document.getElementById("grade").innerHTML = rfid.grade;
+							document.getElementById("balance").innerHTML = rfid.balance;
+							cardSelected = true;
+						}
 						console.log(response);
+						
 					}
 				};
 
-				xhttp.open("GET", "json", true);
+				xhttp.open("GET", "rfid", true);
 				xhttp.send();
 			}
 		</script>

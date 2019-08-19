@@ -33,6 +33,34 @@ const char login_page[] PROGMEM = R"=====(
 				color: #eee;
 			}
 
+            .input {
+                border: 1.5px solid #BBB;
+				border-radius: 10px;
+				width: 350px;
+				padding: 5px;
+				font-size: 20px;
+				outline: none!important;
+            }
+
+            .input:focus {
+				background-color: white;
+			}
+
+            .submit {
+				border: 2px solid white;
+				font-size: 20px;
+				border-radius: 10px;
+				color: white;
+				background-color: transparent;
+				transition:all 250ms;
+				outline: none!important;
+			}
+
+			.submit:hover {
+				color: black;
+				background-color: white;
+			}
+
 		</style>
   </head>
   <body>
@@ -42,10 +70,10 @@ const char login_page[] PROGMEM = R"=====(
 			</h1>
 		</div>
 		<div>
-			<form action="/login" method="POST" class="form">
+			<form action="/" method="POST" class="form">
 				<p>This page requires a password to access.</p>
-				<input type="text" placeholder="Password" name="password">
-				<input type="submit" value="Login">
+				<input type="password" placeholder="Password" class="input" name="password">
+				<input type="submit" class="submit" value="Login">
 			</form>
 		</div>
   </body>
