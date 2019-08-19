@@ -11,9 +11,7 @@ router.get("/:uid", async (req, res) => {
         if(!rfid) return res.status(200).send({ uid, registered: false });
 
         console.log(rfid);
-
-        rfid.registered = true;
-        res.status(200).send(rfid);
+        res.status(200).send({rfid, registered: true});
     } catch(err) {
         res.status(500).send("Internal error - check server log");
         console.log(err);
