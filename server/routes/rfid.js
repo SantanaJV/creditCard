@@ -6,9 +6,11 @@ router.get("/:uid", async (req, res) => {
         let uid = req.params.uid;
 
         console.log("Trying to find " + uid + "...");
-        let rfid = await Rfid.find({ uid });
+        let rfid = await Rfid.findOne({ uid });
 
         if(!rfid) return res.status(200).send({ uid, registered: false });
+
+        console.log(rfid);
 
         rfid.registered = true;
         res.status(200).send(rfid);
@@ -20,16 +22,15 @@ router.get("/:uid", async (req, res) => {
 
 router.post("/", async (req, res) => {
     try{
-        let rfid = req.body;
+        let body = req.body;
         console.log(req.body);
 
-        if(!rfid.uid || !rfid.name || !rfid.grade) return res.status(400).send("Invalid request.");
+        if(!body.uid || !body.name || !body.grade) return res.status(400).send("Invalid request.");
 
-        rfid = await Rfid.find({ uid: rfid.uid });
-
+        let rfid = await Rfid.findOne({ uid: body.uid });
         if(rfid) return res.status(400).send("Rfid already exists, do a put request instead");
 
-        rfid = new Rfid(rfid);
+        rfid = new Rfid(body);
         await rfid.save();
 
         res.status(200).send(rfid);
@@ -39,14 +40,14 @@ router.post("/", async (req, res) => {
     }
 });
 
-router.put("/:uid", async (req, res) => {
+router.post("/update", async (req, res) => {
     try{
         let rfid = req.body;
         console.log(req.body);
 
         if(!rfid.uid || !rfid.name || !rfid.grade) return res.status(400).send("Invalid request.");
 
-        rfid = await Rfid.findOneAndUpdate({ uid: req.body.uid }, rfid);
+        rfid = await Rfid.findOneAndUpdate({ uid: rfid.uid }, rfid);
 
         if(!rfid) return res.status(404).send("Rfid with given UID was not found");
 
@@ -57,9 +58,9 @@ router.put("/:uid", async (req, res) => {
     }
 });
 
-router.delete("/:uid", async (req, res) => {
+router.post("/delete", async (req, res) => {
     try {
-        let uid = req.params.uid;
+        let uid = req.body.uid;
 
         rfid = await Rfid.findOneAndRemove({ uid });
 
